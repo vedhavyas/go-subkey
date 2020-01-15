@@ -60,6 +60,34 @@ func Test_splitURI(t *testing.T) {
 			path:     "//foo/bar//42/69",
 			password: "password",
 		},
+
+		{
+			suri:     "/Alice",
+			phrase:   DevPhrase,
+			path:     "/Alice",
+			password: "",
+		},
+
+		{
+			suri:     "/Alice///password",
+			phrase:   DevPhrase,
+			path:     "/Alice",
+			password: "password",
+		},
+
+		{
+			suri:     "//Alice///password",
+			phrase:   DevPhrase,
+			path:     "//Alice",
+			password: "password",
+		},
+
+		{
+			suri:     "//Alice",
+			phrase:   DevPhrase,
+			path:     "//Alice",
+			password: "",
+		},
 	}
 
 	for _, c := range tests {
@@ -130,6 +158,13 @@ func TestKeyRingFromURI(t *testing.T) {
 			suri:      "crowd swamp sniff machine grid pretty client emotion banana cricket flush soap//foo/bar//42/69///password",
 			publicKey: "0x4055514cd4ddcc7b23024839b68190f3f71bc262eb038145262bfe087bbb5429",
 			ss58Addr:  "5DX4GQQm9rSHVcqaG9CgxdZLsj8buBxcRWEYYcHrRXe4epZg",
+			network:   42,
+		},
+
+		{
+			suri:      "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			publicKey: "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+			ss58Addr:  "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
 			network:   42,
 		},
 	}

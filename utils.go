@@ -16,7 +16,6 @@ import (
 
 const (
 	DevPhrase           = "bottom drive obey lake curtain smoke basket hold race lonely fit walk"
-	DevAddress          = "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV"
 	MiniSecretKeyLength = 32
 	SecretKeyLength     = 64
 	JunctionIdLen       = 32
@@ -126,16 +125,17 @@ func deriveKeyHard(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.MiniSecretK
 }
 
 func splitSURI(suri string) (phrase string, pathMap string, password string, err error) {
-	if strings.HasPrefix(suri, "//") {
-		suri = DevPhrase + suri
-	}
-
 	res := re.FindStringSubmatch(suri)
 	if res == nil {
 		return phrase, pathMap, password, errors.New("invalid URI format")
 	}
 
-	return res[1], res[2], res[5], nil
+	phrase = res[1]
+	if phrase == "" {
+		phrase = DevPhrase
+	}
+
+	return phrase, res[2], res[5], nil
 }
 
 func derivePath(path string) (parts []string) {
@@ -214,6 +214,7 @@ func SS58AddressFromVersion(pub *sr25519.PublicKey, network uint8) string {
 	return base58.Encode(fb)
 }
 
+// https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)#checksum-types
 func ss58Checksum(data []byte) ([]byte, error) {
 	hasher, err := blake2b.New(64, nil)
 	if err != nil {
