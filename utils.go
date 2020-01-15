@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	sr25519 "github.com/ChainSafe/go-schnorrkel"
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/gtank/merlin"
 	"golang.org/x/crypto/blake2b"
 )
@@ -190,16 +191,44 @@ func deriveJunction(code string) (*DeriveJunction, error) {
 	}
 
 	if len(bc) > JunctionIdLen {
-		b, err := blake2b.New256(nil)
-		if err != nil {
-			return nil, err
-		}
-
-		b.Write(bc)
-		bc = b.Sum(nil)
+		b := blake2b.Sum256(bc)
+		bc = b[:]
 	}
 
 	copy(jd.chainCode[:len(bc)], bc)
 	jd.path = code
 	return &jd, nil
+}
+
+const ss58Prefix = "SS58PRE"
+
+func SS58AddressFromVersion(pub *sr25519.PublicKey, network uint8) string {
+	addr := pub.Encode()
+	cs, err := ss58Checksum(append([]byte{network}, addr[:]...))
+	if err != nil {
+		return ""
+	}
+
+	fb := append([]byte{network}, addr[:]...)
+	fb = append(fb, cs[0:2]...)
+	return base58.Encode(fb)
+}
+
+func ss58Checksum(data []byte) ([]byte, error) {
+	hasher, err := blake2b.New(64, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = hasher.Write([]byte(ss58Prefix))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = hasher.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return hasher.Sum(nil), nil
 }
