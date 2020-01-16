@@ -1,10 +1,11 @@
-package subkey
+package sr25519
 
 import (
 	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vedhavyas/go-subkey/common"
 )
 
 func Test_splitURI(t *testing.T) {
@@ -176,11 +177,23 @@ func TestKeyRingFromURI(t *testing.T) {
 			continue
 		}
 
-		pub, err := s.Public()
+		pub := s.Public()
+		assert.Equal(t, c.publicKey, "0x"+hex.EncodeToString(pub[:]))
+		gotSS58Addr, err := s.SS58AddressFromVersion(c.network, common.SS58Checksum)
 		assert.NoError(t, err)
-		pubb := pub.Encode()
-		assert.Equal(t, c.publicKey, "0x"+hex.EncodeToString(pubb[:]))
-		gotSS58Addr := SS58AddressFromVersion(pub, c.network)
 		assert.Equal(t, c.ss58Addr, gotSS58Addr)
 	}
+}
+
+func TestKeyRing_Sign_Verify(t *testing.T) {
+	suri := "hazard angle drop duty wedding quick visual derive mirror umbrella rival tornado///testpassword"
+	kr, err := KeyRingFromURI(suri)
+	assert.NoError(t, err)
+	msg := []byte("this is a message")
+	sig, err := kr.Sign(msg)
+	assert.NoError(t, err)
+	assert.Equal(t,
+		"0xcc94810876362d4592a1e108968204d430111f430d24cb763e80c68a4547c3687fc147861cdce01d07382dda96f38451e86f5ff222a7091aa3ca8e00c338bd89",
+		"0x"+hex.EncodeToString(sig[:]))
+	assert.True(t, kr.Verify(msg, sig))
 }
