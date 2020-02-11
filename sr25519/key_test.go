@@ -2,6 +2,7 @@ package sr25519
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -107,6 +108,7 @@ func Test_splitURI(t *testing.T) {
 func TestKeyRingFromURI(t *testing.T) {
 	tests := []struct {
 		suri      string
+		secret    string
 		publicKey string
 		ss58Addr  string
 		network   uint8
@@ -114,6 +116,7 @@ func TestKeyRingFromURI(t *testing.T) {
 	}{
 		{
 			suri:      "crowd swamp sniff machine grid pretty client emotion banana cricket flush soap",
+			secret:    "0x18446f2d685492c3086391aabe8f5e235c3c2e02521985650f0c97052237e717",
 			publicKey: "0x88af895626c47cf1235ec3898d238baeb41adca3117b9a77bc2f6b78eca0771b",
 			ss58Addr:  "5F9vWoiazEhfxSxCG8nUuDhh5fqNtPnSxp2BrhPsuLqEQASi",
 			network:   42,
@@ -121,6 +124,7 @@ func TestKeyRingFromURI(t *testing.T) {
 
 		{
 			suri:      "crowd swamp sniff machine grid pretty client emotion banana cricket flush soap///password",
+			secret:    "0xd2dbfa26295528f3893430047b773e5bc5457b02c520c5d80bb83366d42de032",
 			publicKey: "0x5c2d57c4cfa7df7a9d0e9546bb575045f5ec14e9771de8bc907910c84cd5de2a",
 			ss58Addr:  "5E9ZjRM9VdqES5JhbABVpvgCstaE7J5x3cE7sTKMGG5TF8tZ",
 			network:   42,
@@ -186,14 +190,23 @@ func TestKeyRingFromURI(t *testing.T) {
 }
 
 func TestKeyRing_Sign_Verify(t *testing.T) {
-	suri := "hazard angle drop duty wedding quick visual derive mirror umbrella rival tornado///testpassword"
+	suri := "0xd2dbfa26295528f3893430047b773e5bc5457b02c520c5d80bb83366d42de032"
 	kr, err := KeyRingFromURI(suri)
 	assert.NoError(t, err)
-	msg := []byte("this is a message")
+	msg := []byte("testmessage")
 	sig, err := kr.Sign(msg)
 	assert.NoError(t, err)
-	assert.Equal(t,
-		"0xcc94810876362d4592a1e108968204d430111f430d24cb763e80c68a4547c3687fc147861cdce01d07382dda96f38451e86f5ff222a7091aa3ca8e00c338bd89",
-		"0x"+hex.EncodeToString(sig[:]))
 	assert.True(t, kr.Verify(msg, sig))
+	fmt.Println(hex.EncodeToString(sig[:]))
+}
+
+func TestKeyRing_Verify(t *testing.T) {
+	suri := "0xd2dbfa26295528f3893430047b773e5bc5457b02c520c5d80bb83366d42de032"
+	kr, err := KeyRingFromURI(suri)
+	assert.NoError(t, err)
+	sig, err := hex.DecodeString("1e9d2d7205d1f4cc75ac62b1d21353126951b3e05715fbe8a26266ff28a769765fca2df6dfa51d9ba35263de6225b92fa5b672c871569846a6e95346d0d17e84")
+	assert.NoError(t, err)
+	var sigf [64]byte
+	copy(sigf[:], sig)
+	assert.True(t, kr.Verify([]byte("testmessage"), sigf))
 }

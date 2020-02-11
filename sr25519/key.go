@@ -81,7 +81,7 @@ func KeyRingFromURI(suri string) (*KeyRing, error) {
 		return nil, err
 	}
 
-	secret, err := deriveSecret(phrase, pwd)
+	secret, _, err := deriveSecret(phrase, pwd)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,8 @@ func KeyRingFromURI(suri string) (*KeyRing, error) {
 	return &KeyRing{secret: *secret, pub: *pub}, nil
 }
 
-func deriveSecret(phrase, pwd string) (secret *sr25519.SecretKey, err error) {
+func deriveSecret(phrase, pwd string) (secret *sr25519.SecretKey, seed []byte, err error) {
+	var seedBytes [32]byte
 	if b, ok := common.DecodeHex(phrase); ok {
 		switch len(b) {
 		case MiniSecretKeyLength:
@@ -124,12 +125,14 @@ func deriveSecret(phrase, pwd string) (secret *sr25519.SecretKey, err error) {
 			copy(mss[:], b)
 			ms, err := sr25519.NewMiniSecretKeyFromRaw(mss)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
 			secret = ms.ExpandEd25519()
+			seedBytes = ms.Encode()
 
 		case SecretKeyLength:
+			// TODO(ved): check the rust code for scalar
 			var key, nonce [32]byte
 			copy(key[:], b[0:32])
 			copy(nonce[:], b[32:64])
@@ -138,13 +141,14 @@ func deriveSecret(phrase, pwd string) (secret *sr25519.SecretKey, err error) {
 	} else {
 		ms, err := sr25519.MiniSecretFromMnemonic(phrase, pwd)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		secret = ms.ExpandEd25519()
+		seedBytes = ms.Encode()
 	}
 
-	return secret, nil
+	return secret, seedBytes[:], nil
 }
 
 func splitSURI(suri string) (phrase string, pathMap string, password string, err error) {
