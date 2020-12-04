@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/vedhavyas/go-subkey"
+	"github.com/vedhavyas/go-subkey/sr25519"
 )
 
 func main() {
@@ -15,24 +15,22 @@ func main() {
 	m := flag.String("msg", "", "Message to be signed in Hex")
 	flag.Parse()
 
-	secb, err := decodeHex(*s)
-	if err != nil {
-		panic(err)
-	}
-	var secret [32]byte
-	copy(secret[:], secb)
-
 	msg, err := decodeHex(*m)
 	if err != nil {
 		panic(err)
 	}
 
-	sig, err := subkey.Sign(secret, msg)
+	kr, err := sr25519.KeyRingFromURI(*s)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(subkey.Verify(secret, sig, msg))
+	sig, err := kr.Sign(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(kr.Verify(msg, sig))
 }
 
 func decodeHex(data string) ([]byte, error) {
