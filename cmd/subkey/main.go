@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/sr25519"
 )
 
@@ -20,7 +21,7 @@ func main() {
 		panic(err)
 	}
 
-	kr, err := sr25519.KeyRingFromURI(*s)
+	kr, err := subkey.Derive(sr25519.Scheme{}, *s)
 	if err != nil {
 		panic(err)
 	}
