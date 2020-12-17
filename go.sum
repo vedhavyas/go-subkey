@@ -1,5 +1,7 @@
 github.com/ChainSafe/go-schnorrkel v0.0.0-20201021020641-d3c6d3118d10 h1:V22pHpfKZ/bYx/OwI3WfqUKGYQmsJ3JJ08k5lxIAdvs=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20201021020641-d3c6d3118d10/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
+github.com/Joystream/parity-codec-go v0.0.0-20190108082741-07755503ecfd h1:Z8DN4jG0UBPltIjpvcpKCSJPCbzNzAAGooJE9Po68mw=
+github.com/Joystream/parity-codec-go v0.0.0-20190108082741-07755503ecfd/go.mod h1:5Gd61YpKZg6D2u08Yj6CznFaUtSZXelYy7QADJ8srIw=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d h1:49RLWk1j44Xu4fjHb6JFYmeUnDORVwHNkDxaQ0ctCVU=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v0.0.0-20200817134856-d632e0d11689 h1:LApiux6F9SuXR5wVKBplzLJli1wm/wrlH5KYFMicCfQ=

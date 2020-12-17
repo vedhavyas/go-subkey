@@ -14,6 +14,8 @@ const (
 
 	// SecretKeyLength is the length of the SecretKey
 	SecretKeyLength = 64
+
+	SignatureLength = 64
 )
 
 // keyRing is a wrapper around sr25519 secret and public
@@ -23,18 +25,22 @@ type keyRing struct {
 }
 
 // Sign signs the message using sr25519 curve
-func (kr keyRing) Sign(msg []byte) (signature [64]byte, err error) {
+func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 	sig, err := kr.secret.Sign(signingContext(msg))
 	if err != nil {
 		return signature, err
 	}
-	return sig.Encode(), nil
+
+	s := sig.Encode()
+	return s[:], nil
 }
 
 // Verify verifies the signature.
-func (kr keyRing) Verify(msg []byte, signature [64]byte) bool {
+func (kr keyRing) Verify(msg []byte, signature []byte) bool {
+	var sigs [SignatureLength]byte
+	copy(sigs[:], signature)
 	sig := new(sr25519.Signature)
-	if err := sig.Decode(signature); err != nil {
+	if err := sig.Decode(sigs); err != nil {
 		return false
 	}
 	return kr.pub.Verify(sig, signingContext(msg))
@@ -45,18 +51,43 @@ func signingContext(msg []byte) *merlin.Transcript {
 }
 
 // Public returns the public key in bytes
-func (kr keyRing) Public() [32]byte {
-	return kr.pub.Encode()
+func (kr keyRing) Public() []byte {
+	pub := kr.pub.Encode()
+	return pub[:]
 }
 
 // Secret returns the secret in bytes.
-func (kr keyRing) Secret() [32]byte {
-	return kr.secret.Encode()
+func (kr keyRing) Secret() []byte {
+	secret := kr.secret.Encode()
+	return secret[:]
 }
 
 // SS58Address returns the SS58Address using the known network format
 func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
-	return common.SS58AddressWithVersion(kr.pub.Encode(), uint8(network), ctype)
+	pub := kr.pub.Encode()
+	return common.SS58AddressWithVersion(pub[:], uint8(network), ctype)
+}
+
+func deriveKeySoft(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.SecretKey, error) {
+	t := merlin.NewTranscript("SchnorrRistrettoHDKD")
+	t.AppendMessage([]byte("sign-bytes"), nil)
+	ek, err := secret.DeriveKey(t, cc)
+	if err != nil {
+		return nil, err
+	}
+	return ek.Secret()
+}
+
+func deriveKeyHard(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.MiniSecretKey, error) {
+	t := merlin.NewTranscript("SchnorrRistrettoHDKD")
+	t.AppendMessage([]byte("sign-bytes"), nil)
+	t.AppendMessage([]byte("chain-code"), cc[:])
+	s := secret.Encode()
+	t.AppendMessage([]byte("secret-key"), s[:])
+	mskb := t.ExtractBytes([]byte("HDKD-hard"), MiniSecretKeyLength)
+	msk := [MiniSecretKeyLength]byte{}
+	copy(msk[:], mskb)
+	return sr25519.NewMiniSecretKeyFromRaw(msk)
 }
 
 type Scheme struct{}

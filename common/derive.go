@@ -55,7 +55,7 @@ func parseDeriveJunction(code string) (DeriveJunction, error) {
 		bc = make([]byte, 8, 8)
 		binary.LittleEndian.PutUint64(bc, u64)
 	} else {
-		cl, err := compactUint(uint64(len(code)))
+		cl, err := CompactUint(uint64(len(code)))
 		if err != nil {
 			return jd, err
 		}

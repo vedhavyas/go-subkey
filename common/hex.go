@@ -14,3 +14,12 @@ func DecodeHex(uri string) (seed []byte, ok bool) {
 	res, err := hex.DecodeString(uri)
 	return res, err == nil
 }
+
+func EncodeHex(b []byte) string {
+	res := hex.EncodeToString(b)
+	if !strings.HasPrefix(res, "0x") {
+		res = "0x" + res
+	}
+
+	return res
+}

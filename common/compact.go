@@ -20,7 +20,7 @@ import (
 	"errors"
 )
 
-func compactUint(v uint64) ([]byte, error) {
+func CompactUint(v uint64) ([]byte, error) {
 	// This code was copied over and adapted with many thanks from Joystream/parity-codec-go:withreflect@develop
 	var buf bytes.Buffer
 	if v < 1<<30 {
