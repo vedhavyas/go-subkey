@@ -2,6 +2,7 @@ package subkey
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -210,7 +211,7 @@ func TestDerive(t *testing.T) {
 					seed = ""
 				}
 				assert.Equal(t, c.seed, seed)
-				gotSS58Addr, err := s.SS58Address(common.Network(c.network), common.SS58Checksum)
+				gotSS58Addr, err := s.SS58Address(c.network)
 				assert.NoError(t, err)
 				assert.Equal(t, c.ss58Addr, gotSS58Addr)
 			})
@@ -218,26 +219,25 @@ func TestDerive(t *testing.T) {
 	}
 }
 
-func TestKeyRing_Sign_Verify(t *testing.T) {
-	uri := "0xd2dbfa26295528f3893430047b773e5bc5457b02c520c5d80bb83366d42de032"
-	msg := []byte(strings.Repeat("as", 20))
+func Test_Generate_Sign_Verify(t *testing.T) {
+	msg := []byte(strings.Repeat("as", rand.Intn(100)))
 	verify := func(kr common.KeyPair) {
 		sig, err := kr.Sign(msg)
 		assert.NoError(t, err)
 		assert.True(t, kr.Verify(msg, sig))
 	}
 	t.Run("sr25519", func(t *testing.T) {
-		kr, err := Derive(sr25519.Scheme{}, uri)
+		kr, err := sr25519.Scheme{}.Generate()
 		assert.NoError(t, err)
 		verify(kr)
 	})
 	t.Run("ed25519", func(t *testing.T) {
-		kr, err := Derive(ed25519.Scheme{}, uri)
+		kr, err := ed25519.Scheme{}.Generate()
 		assert.NoError(t, err)
 		verify(kr)
 	})
 	t.Run("ecdsa", func(t *testing.T) {
-		kr, err := Derive(ecdsa.Scheme{}, uri)
+		kr, err := ecdsa.Scheme{}.Generate()
 		assert.NoError(t, err)
 		verify(kr)
 	})

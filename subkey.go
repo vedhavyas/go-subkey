@@ -6,13 +6,16 @@ import (
 	"github.com/vedhavyas/go-subkey/common"
 )
 
+// Scheme represents a cryptography scheme.
 type Scheme interface {
 	fmt.Stringer
+	Generate() (common.KeyPair, error)
 	FromSeed(seed []byte) (common.KeyPair, error)
 	FromPhrase(phrase, password string) (common.KeyPair, error)
 	Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error)
 }
 
+// Derive derives the Keypair from the URI using the provided cryptography scheme.
 func Derive(scheme Scheme, uri string) (common.KeyPair, error) {
 	phrase, path, pwd, err := common.SplitURI(uri)
 	if err != nil {

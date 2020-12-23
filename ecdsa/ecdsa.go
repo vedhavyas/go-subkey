@@ -11,19 +11,16 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-// keyRing is a wrapper around sr25519 secret and public
 type keyRing struct {
 	secret *ecdsa.PrivateKey
 	pub    *ecdsa.PublicKey
 }
 
-// Sign signs the message using sr25519 curve
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 	digest := blake2b.Sum256(msg)
 	return secp256k1.Sign(digest[:], kr.secret)
 }
 
-// Verify verifies the signature.
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
 	digest := blake2b.Sum256(msg)
 	signature = signature[:64]
@@ -34,26 +31,39 @@ func (kr keyRing) Seed() []byte {
 	return secp256k1.FromECDSA(kr.secret)
 }
 
-// Public returns the public key in bytes
 func (kr keyRing) Public() []byte {
 	return secp256k1.CompressPubkey(kr.pub)
 }
 
-// AccountID returns the AccountID in bytes
 func (kr keyRing) AccountID() []byte {
 	account := blake2b.Sum256(kr.Public())
 	return account[:]
 }
 
-// SS58Address returns the SS58Address using the known network format
-func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
-	return common.SS58AddressWithVersion(kr.AccountID(), uint8(network), ctype)
+func (kr keyRing) SS58Address(network uint8) (string, error) {
+	return common.SS58Address(kr.AccountID(), network)
+}
+
+func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
+	return common.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
 }
 
 type Scheme struct{}
 
 func (s Scheme) String() string {
 	return "Ecdsa"
+}
+
+func (s Scheme) Generate() (common.KeyPair, error) {
+	secret, err := secp256k1.GenerateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return keyRing{
+		secret: secret,
+		pub:    secret.Public().(*ecdsa.PublicKey),
+	}, nil
 }
 
 func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
