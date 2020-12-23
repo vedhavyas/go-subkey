@@ -1,59 +1,37 @@
 package common
 
 import (
-	"fmt"
-
 	"github.com/decred/base58"
 	"golang.org/x/crypto/blake2b"
 )
 
-// ChecksumType represents the one or more checksum types.
-// More here: https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)#checksum-types
-// TODO(ved): Maybe we can add these types to the known list ?
-type ChecksumType int
-
-type Network uint8
-
 const (
 	ss58Prefix = "SS58PRE"
-
-	// ErrUnknownNetwork error when network is not a known network.
-	ErrUnknownNetwork = Error("Unknown Network")
-
-	// SS58Checksum uses the concat(address-type, address) as blake2b hash pre-image
-	SS58Checksum ChecksumType = iota
-
-	// AccountIDChecksum uses the address as the blake2b hash pre-image
-	AccountID
 )
 
-const (
-	Substrate Network = 42
-	Polkadot          = 0
-	Kusama            = 2
-	Dothereum         = 20
-	Kulupu            = 16
-	Edgeware          = 7
-)
+// SS58Address derives ss58 address from the accountID and network
+// uses SS58Checksum checksum type
+// SS58Checksum uses the concat(network, accountID) as blake2b hash pre-image
+// More here: https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)#checksum-types
+func SS58Address(accountID []byte, network uint8) (string, error) {
+	return toBase58(append([]byte{network}, accountID...), accountID, network)
+}
 
-// SS58Address derives ss58 address from the address, network version, and checksumType
-func SS58AddressWithVersion(accountID []byte, version uint8, ctype ChecksumType) (string, error) {
-	var cbuf []byte
-	switch ctype {
-	case SS58Checksum:
-		cbuf = append([]byte{version}, accountID...)
-	case AccountID:
-		cbuf = accountID[:]
-	default:
-		return "", fmt.Errorf("unknown checksum type: %v", ctype)
-	}
+// SS58AddressWithAccountIDChecksum derives ss58 address from the accountID, network
+// uses AccountID checksum type
+// AccountIDChecksum uses the accountID as the blake2b hash pre-image
+// More here: https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)#checksum-types
+func SS58AddressWithAccountIDChecksum(accountID []byte, network uint8) (string, error) {
+	return toBase58(accountID[:], accountID, network)
+}
 
-	cs, err := ss58Checksum(append(cbuf))
+func toBase58(buf, accountID []byte, network uint8) (string, error) {
+	cs, err := ss58Checksum(append(buf))
 	if err != nil {
 		return "", err
 	}
 
-	fb := append([]byte{version}, accountID...)
+	fb := append([]byte{network}, accountID...)
 	fb = append(fb, cs[0:2]...)
 	return base58.Encode(fb), nil
 }

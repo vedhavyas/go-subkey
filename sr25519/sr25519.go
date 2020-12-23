@@ -9,23 +9,19 @@ import (
 )
 
 const (
-	// MiniSecretKeyLength is the length of the MiniSecret Key
-	MiniSecretKeyLength = 32
+	miniSecretKeyLength = 32
 
-	// SecretKeyLength is the length of the SecretKey
-	SecretKeyLength = 64
+	secretKeyLength = 64
 
-	SignatureLength = 64
+	signatureLength = 64
 )
 
-// keyRing is a wrapper around sr25519 secret and public
 type keyRing struct {
 	seed   []byte
 	secret *sr25519.SecretKey
 	pub    *sr25519.PublicKey
 }
 
-// Sign signs the message using sr25519 curve
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 	sig, err := kr.secret.Sign(signingContext(msg))
 	if err != nil {
@@ -36,9 +32,8 @@ func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 	return s[:], nil
 }
 
-// Verify verifies the signature.
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
-	var sigs [SignatureLength]byte
+	var sigs [signatureLength]byte
 	copy(sigs[:], signature)
 	sig := new(sr25519.Signature)
 	if err := sig.Decode(sigs); err != nil {
@@ -65,9 +60,12 @@ func (kr keyRing) AccountID() []byte {
 	return kr.Public()
 }
 
-// SS58Address returns the SS58Address using the known network format
-func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
-	return common.SS58AddressWithVersion(kr.AccountID(), uint8(network), ctype)
+func (kr keyRing) SS58Address(network uint8) (string, error) {
+	return common.SS58Address(kr.AccountID(), network)
+}
+
+func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
+	return common.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
 }
 
 func deriveKeySoft(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.SecretKey, error) {
@@ -86,8 +84,8 @@ func deriveKeyHard(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.MiniSecretK
 	t.AppendMessage([]byte("chain-code"), cc[:])
 	s := secret.Encode()
 	t.AppendMessage([]byte("secret-key"), s[:])
-	mskb := t.ExtractBytes([]byte("HDKD-hard"), MiniSecretKeyLength)
-	msk := [MiniSecretKeyLength]byte{}
+	mskb := t.ExtractBytes([]byte("HDKD-hard"), miniSecretKeyLength)
+	msk := [miniSecretKeyLength]byte{}
 	copy(msk[:], mskb)
 	return sr25519.NewMiniSecretKeyFromRaw(msk)
 }
@@ -98,9 +96,29 @@ func (s Scheme) String() string {
 	return "Sr25519"
 }
 
+func (s Scheme) Generate() (common.KeyPair, error) {
+	ms, err := sr25519.GenerateMiniSecretKey()
+	if err != nil {
+		return nil, err
+	}
+
+	secret := ms.ExpandEd25519()
+	pub, err := secret.Public()
+	if err != nil {
+		return nil, err
+	}
+
+	seed := ms.Encode()
+	return keyRing{
+		seed:   seed[:],
+		secret: secret,
+		pub:    pub,
+	}, nil
+}
+
 func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 	switch len(seed) {
-	case MiniSecretKeyLength:
+	case miniSecretKeyLength:
 		var mss [32]byte
 		copy(mss[:], seed)
 		ms, err := sr25519.NewMiniSecretKeyFromRaw(mss)
@@ -114,7 +132,7 @@ func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 			pub:    ms.Public(),
 		}, nil
 
-	case SecretKeyLength:
+	case secretKeyLength:
 		var key, nonce [32]byte
 		copy(key[:], seed[0:32])
 		copy(nonce[:], seed[32:64])

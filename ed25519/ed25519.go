@@ -3,6 +3,7 @@ package ed25519
 import (
 	"bytes"
 	"crypto"
+	"crypto/rand"
 	"errors"
 
 	"github.com/ChainSafe/go-schnorrkel"
@@ -11,23 +12,19 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
-// keyRing is a wrapper around sr25519 secret and public
 type keyRing struct {
 	secret *ed25519.PrivateKey
 	pub    *ed25519.PublicKey
 }
 
-// Sign signs the message using sr25519 curve
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 	return kr.secret.Sign(nil, msg, crypto.Hash(0))
 }
 
-// Verify verifies the signature.
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
 	return ed25519.Verify(*kr.pub, msg, signature)
 }
 
-// Public returns the public key in bytes
 func (kr keyRing) Public() []byte {
 	return *kr.pub
 }
@@ -40,15 +37,30 @@ func (kr keyRing) AccountID() []byte {
 	return kr.Public()
 }
 
-// SS58Address returns the SS58Address using the known network format
-func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
-	return common.SS58AddressWithVersion(kr.AccountID(), uint8(network), ctype)
+func (kr keyRing) SS58Address(network uint8) (string, error) {
+	return common.SS58Address(kr.AccountID(), network)
+}
+
+func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
+	return common.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
 }
 
 type Scheme struct{}
 
 func (s Scheme) String() string {
 	return "Ed25519"
+}
+
+func (s Scheme) Generate() (common.KeyPair, error) {
+	pub, secret, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return keyRing{
+		secret: &secret,
+		pub:    &pub,
+	}, nil
 }
 
 func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
