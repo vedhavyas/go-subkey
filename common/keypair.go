@@ -5,8 +5,6 @@ type KeyPair interface {
 	Signer
 	Verifier
 
-	// Secret returns the secret in bytes.
-	Secret() []byte
 	// Public returns the secret in bytes.
 	Public() []byte
 
