@@ -32,11 +32,6 @@ func (kr keyRing) Public() []byte {
 	return *kr.pub
 }
 
-// Secret returns the secret in bytes.
-func (kr keyRing) Secret() []byte {
-	return kr.secret.Seed()
-}
-
 // SS58Address returns the SS58Address using the known network format
 func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
 	return common.SS58AddressWithVersion(*kr.pub, uint8(network), ctype)
@@ -63,34 +58,26 @@ func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
 }
 
 func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error) {
-	return nil, errors.New("Derivation not supported by Ed25519")
-	// acc := pair.(keyRing).secret.Seed()
-	// var err error
-	// for _, dj := range djs {
-	// 	if dj.IsHard {
-	// 		acc, err = deriveKeyHard(acc, dj.ChainCode)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	//
-	// 		continue
-	// 	}
-	//
-	// 	return nil, errors.New("soft derivation is not supported")
-	// }
-	//
-	// return s.FromSeed(acc)
+	acc := pair.(keyRing).secret.Seed()
+	var err error
+	for _, dj := range djs {
+		if !dj.IsHard {
+			return nil, errors.New("soft derivation is not supported")
+		}
+
+		acc, err = deriveKeyHard(acc, dj.ChainCode)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.FromSeed(acc)
 }
 
 func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 	var buffer bytes.Buffer
 	d := common.NewEncoder(&buffer)
 	err := d.Encode("Ed25519HDKD")
-	if err != nil {
-		return nil, err
-	}
-
-	cl, err := common.CompactUint(uint64(len(buffer.Bytes())))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +91,6 @@ func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 		}
 	}
 
-	res := append(cl, buffer.Bytes()...)
-	seed := blake2b.Sum256(res)
+	seed := blake2b.Sum256(buffer.Bytes())
 	return seed[:], nil
 }

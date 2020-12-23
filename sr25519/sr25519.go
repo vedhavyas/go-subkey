@@ -56,12 +56,6 @@ func (kr keyRing) Public() []byte {
 	return pub[:]
 }
 
-// Secret returns the secret in bytes.
-func (kr keyRing) Secret() []byte {
-	secret := kr.secret.Encode()
-	return secret[:]
-}
-
 // SS58Address returns the SS58Address using the known network format
 func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
 	pub := kr.pub.Encode()
