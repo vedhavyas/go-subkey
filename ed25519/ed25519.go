@@ -32,6 +32,10 @@ func (kr keyRing) Public() []byte {
 	return *kr.pub
 }
 
+func (kr keyRing) Seed() []byte {
+	return kr.secret.Seed()
+}
+
 func (kr keyRing) AccountID() []byte {
 	return kr.Public()
 }

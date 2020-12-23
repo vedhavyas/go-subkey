@@ -20,6 +20,7 @@ const (
 
 // keyRing is a wrapper around sr25519 secret and public
 type keyRing struct {
+	seed   []byte
 	secret *sr25519.SecretKey
 	pub    *sr25519.PublicKey
 }
@@ -54,6 +55,10 @@ func signingContext(msg []byte) *merlin.Transcript {
 func (kr keyRing) Public() []byte {
 	pub := kr.pub.Encode()
 	return pub[:]
+}
+
+func (kr keyRing) Seed() []byte {
+	return kr.seed
 }
 
 func (kr keyRing) AccountID() []byte {
@@ -104,6 +109,7 @@ func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 		}
 
 		return keyRing{
+			seed:   seed,
 			secret: ms.ExpandEd25519(),
 			pub:    ms.Public(),
 		}, nil
@@ -119,6 +125,7 @@ func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 		}
 
 		return keyRing{
+			seed:   seed,
 			secret: secret,
 			pub:    pub,
 		}, nil
@@ -139,7 +146,9 @@ func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
 		return nil, err
 	}
 
+	seed := ms.Encode()
 	return keyRing{
+		seed:   seed[:],
 		secret: secret,
 		pub:    pub,
 	}, nil
@@ -148,6 +157,7 @@ func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
 func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error) {
 	kr := pair.(keyRing)
 	secret := kr.secret
+	seed := kr.seed
 	var err error
 	for _, dj := range djs {
 		if dj.IsHard {
@@ -157,6 +167,10 @@ func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common
 			}
 
 			secret = ms.ExpandEd25519()
+			if seed != nil {
+				es := ms.Encode()
+				seed = es[:]
+			}
 			continue
 		}
 
@@ -164,6 +178,7 @@ func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common
 		if err != nil {
 			return nil, err
 		}
+		seed = nil
 	}
 
 	pub, err := secret.Public()
@@ -171,5 +186,5 @@ func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common
 		return nil, err
 	}
 
-	return &keyRing{secret: secret, pub: pub}, nil
+	return &keyRing{seed: seed, secret: secret, pub: pub}, nil
 }

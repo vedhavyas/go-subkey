@@ -30,6 +30,10 @@ func (kr keyRing) Verify(msg []byte, signature []byte) bool {
 	return secp256k1.VerifySignature(kr.Public(), digest[:], signature)
 }
 
+func (kr keyRing) Seed() []byte {
+	return secp256k1.FromECDSA(kr.secret)
+}
+
 // Public returns the public key in bytes
 func (kr keyRing) Public() []byte {
 	return secp256k1.CompressPubkey(kr.pub)

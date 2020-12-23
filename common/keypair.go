@@ -5,6 +5,9 @@ type KeyPair interface {
 	Signer
 	Verifier
 
+	// Seed returns the seed of the pair
+	Seed() []byte
+
 	// Public returns the secret in bytes.
 	Public() []byte
 
