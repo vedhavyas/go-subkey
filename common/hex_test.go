@@ -30,8 +30,10 @@ func TestDecodeHex(t *testing.T) {
 	}
 
 	for _, c := range tests {
-		res, valid := DecodeHex(c.hex)
-		assert.Equal(t, c.valid, valid)
-		assert.True(t, bytes.Equal(c.bytes, res))
+		t.Run(c.hex, func(t *testing.T) {
+			res, valid := DecodeHex(c.hex)
+			assert.Equal(t, c.valid, valid)
+			assert.True(t, bytes.Equal(c.bytes, res))
+		})
 	}
 }

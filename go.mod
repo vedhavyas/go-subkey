@@ -7,6 +7,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/base58 v1.0.3
+	github.com/ethereum/go-ethereum v1.9.25
 	github.com/gtank/merlin v0.1.1
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/stretchr/testify v1.6.1

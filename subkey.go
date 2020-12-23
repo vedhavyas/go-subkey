@@ -1,10 +1,13 @@
 package subkey
 
 import (
+	"fmt"
+
 	"github.com/vedhavyas/go-subkey/common"
 )
 
 type Scheme interface {
+	fmt.Stringer
 	FromSeed(seed []byte) (common.KeyPair, error)
 	FromPhrase(phrase, password string) (common.KeyPair, error)
 	Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error)
