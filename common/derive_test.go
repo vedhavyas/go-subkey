@@ -90,14 +90,17 @@ func TestSplitURI(t *testing.T) {
 	}
 
 	for _, c := range tests {
-		phrase, path, password, err := SplitURI(c.suri)
-		if err != nil {
-			assert.True(t, c.err)
-			continue
-		}
+		t.Run(c.suri, func(t *testing.T) {
+			phrase, path, password, err := SplitURI(c.suri)
+			if err != nil {
+				assert.True(t, c.err)
+				return
+			}
 
-		assert.Equal(t, c.phrase, phrase)
-		assert.Equal(t, c.path, path)
-		assert.Equal(t, c.password, password)
+			assert.Equal(t, c.phrase, phrase)
+			assert.Equal(t, c.path, path)
+			assert.Equal(t, c.password, password)
+		})
+
 	}
 }

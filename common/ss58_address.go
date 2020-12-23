@@ -37,13 +37,13 @@ const (
 )
 
 // SS58Address derives ss58 address from the address, network version, and checksumType
-func SS58AddressWithVersion(addr []byte, version uint8, ctype ChecksumType) (string, error) {
+func SS58AddressWithVersion(accountID []byte, version uint8, ctype ChecksumType) (string, error) {
 	var cbuf []byte
 	switch ctype {
 	case SS58Checksum:
-		cbuf = append([]byte{version}, addr...)
+		cbuf = append([]byte{version}, accountID...)
 	case AccountID:
-		cbuf = addr[:]
+		cbuf = accountID[:]
 	default:
 		return "", fmt.Errorf("unknown checksum type: %v", ctype)
 	}
@@ -53,7 +53,7 @@ func SS58AddressWithVersion(addr []byte, version uint8, ctype ChecksumType) (str
 		return "", err
 	}
 
-	fb := append([]byte{version}, addr...)
+	fb := append([]byte{version}, accountID...)
 	fb = append(fb, cs[0:2]...)
 	return base58.Encode(fb), nil
 }

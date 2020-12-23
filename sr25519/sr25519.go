@@ -56,10 +56,13 @@ func (kr keyRing) Public() []byte {
 	return pub[:]
 }
 
+func (kr keyRing) AccountID() []byte {
+	return kr.Public()
+}
+
 // SS58Address returns the SS58Address using the known network format
 func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType) (string, error) {
-	pub := kr.pub.Encode()
-	return common.SS58AddressWithVersion(pub[:], uint8(network), ctype)
+	return common.SS58AddressWithVersion(kr.AccountID(), uint8(network), ctype)
 }
 
 func deriveKeySoft(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.SecretKey, error) {
@@ -85,6 +88,10 @@ func deriveKeyHard(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.MiniSecretK
 }
 
 type Scheme struct{}
+
+func (s Scheme) String() string {
+	return "Sr25519"
+}
 
 func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 	switch len(seed) {

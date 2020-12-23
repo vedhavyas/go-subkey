@@ -1,39 +1,44 @@
-package ed25519
+package ecdsa
 
 import (
 	"bytes"
-	"crypto"
+	"crypto/ecdsa"
 	"errors"
 
 	"github.com/ChainSafe/go-schnorrkel"
+	secp256k1 "github.com/ethereum/go-ethereum/crypto"
 	"github.com/vedhavyas/go-subkey/common"
 	"golang.org/x/crypto/blake2b"
-	"golang.org/x/crypto/ed25519"
 )
 
 // keyRing is a wrapper around sr25519 secret and public
 type keyRing struct {
-	secret *ed25519.PrivateKey
-	pub    *ed25519.PublicKey
+	secret *ecdsa.PrivateKey
+	pub    *ecdsa.PublicKey
 }
 
 // Sign signs the message using sr25519 curve
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
-	return kr.secret.Sign(nil, msg, crypto.Hash(0))
+	digest := blake2b.Sum256(msg)
+	return secp256k1.Sign(digest[:], kr.secret)
 }
 
 // Verify verifies the signature.
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
-	return ed25519.Verify(*kr.pub, msg, signature)
+	digest := blake2b.Sum256(msg)
+	signature = signature[:64]
+	return secp256k1.VerifySignature(kr.Public(), digest[:], signature)
 }
 
 // Public returns the public key in bytes
 func (kr keyRing) Public() []byte {
-	return *kr.pub
+	return secp256k1.CompressPubkey(kr.pub)
 }
 
+// AccountID returns the AccountID in bytes
 func (kr keyRing) AccountID() []byte {
-	return kr.Public()
+	account := blake2b.Sum256(kr.Public())
+	return account[:]
 }
 
 // SS58Address returns the SS58Address using the known network format
@@ -44,15 +49,15 @@ func (kr keyRing) SS58Address(network common.Network, ctype common.ChecksumType)
 type Scheme struct{}
 
 func (s Scheme) String() string {
-	return "Ed25519"
+	return "Ecdsa"
 }
 
 func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
-	secret := ed25519.NewKeyFromSeed(seed)
-	pub := secret.Public().(ed25519.PublicKey)
+	secret := secp256k1.ToECDSAUnsafe(seed)
+	pub := secret.Public().(*ecdsa.PublicKey)
 	return keyRing{
-		secret: &secret,
-		pub:    &pub,
+		secret: secret,
+		pub:    pub,
 	}, nil
 }
 
@@ -66,7 +71,7 @@ func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
 }
 
 func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error) {
-	acc := pair.(keyRing).secret.Seed()
+	acc := secp256k1.FromECDSA(pair.(keyRing).secret)
 	var err error
 	for _, dj := range djs {
 		if !dj.IsHard {
@@ -85,7 +90,7 @@ func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common
 func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 	var buffer bytes.Buffer
 	d := common.NewEncoder(&buffer)
-	err := d.Encode("Ed25519HDKD")
+	err := d.Encode("Secp256k1HDKD")
 	if err != nil {
 		return nil, err
 	}
