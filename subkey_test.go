@@ -13,6 +13,7 @@ import (
 	"github.com/vedhavyas/go-subkey/sr25519"
 )
 
+//nolint:funlen
 func TestDerive(t *testing.T) {
 	testsMap := map[Scheme][]struct {
 		uri       string
@@ -220,7 +221,7 @@ func TestDerive(t *testing.T) {
 }
 
 func Test_Generate_Sign_Verify(t *testing.T) {
-	msg := []byte(strings.Repeat("as", rand.Intn(100)))
+	msg := []byte(strings.Repeat("as", rand.Intn(100))) //nolint:gosec
 	verify := func(kr common.KeyPair) {
 		sig, err := kr.Sign(msg)
 		assert.NoError(t, err)

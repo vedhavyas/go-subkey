@@ -22,11 +22,11 @@ func SS58Address(accountID []byte, network uint8) (string, error) {
 // AccountIDChecksum uses the accountID as the blake2b hash pre-image
 // More here: https://github.com/paritytech/substrate/wiki/External-Address-Format-(SS58)#checksum-types
 func SS58AddressWithAccountIDChecksum(accountID []byte, network uint8) (string, error) {
-	return toBase58(accountID[:], accountID, network)
+	return toBase58(accountID, accountID, network)
 }
 
 func toBase58(buf, accountID []byte, network uint8) (string, error) {
-	cs, err := ss58Checksum(append(buf))
+	cs, err := ss58Checksum(buf)
 	if err != nil {
 		return "", err
 	}

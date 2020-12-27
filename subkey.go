@@ -16,17 +16,19 @@ type Scheme interface {
 }
 
 // Derive derives the Keypair from the URI using the provided cryptography scheme.
-func Derive(scheme Scheme, uri string) (common.KeyPair, error) {
+func Derive(scheme Scheme, uri string) (kp common.KeyPair, err error) {
 	phrase, path, pwd, err := common.SplitURI(uri)
 	if err != nil {
 		return nil, err
 	}
 
-	var kp common.KeyPair
 	if b, ok := common.DecodeHex(phrase); ok {
 		kp, err = scheme.FromSeed(b)
 	} else {
 		kp, err = scheme.FromPhrase(phrase, pwd)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	djs, err := common.DeriveJunctions(common.DerivePath(path))

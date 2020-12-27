@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:funlen
 func TestSplitURI(t *testing.T) {
 	tests := []struct {
 		suri, phrase, path, password string
@@ -101,6 +102,5 @@ func TestSplitURI(t *testing.T) {
 			assert.Equal(t, c.path, path)
 			assert.Equal(t, c.password, password)
 		})
-
 	}
 }

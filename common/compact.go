@@ -24,14 +24,15 @@ func CompactUint(v uint64) ([]byte, error) {
 	// This code was copied over and adapted with many thanks from Joystream/parity-codec-go:withreflect@develop
 	var buf bytes.Buffer
 	if v < 1<<30 {
-		if v < 1<<6 {
+		switch {
+		case v < 1<<6:
 			return []byte{byte(v) << 2}, nil
-		} else if v < 1<<14 {
+		case v < 1<<14:
 			err := binary.Write(&buf, binary.LittleEndian, uint16(v<<2)+1)
 			if err != nil {
 				return nil, err
 			}
-		} else {
+		default:
 			err := binary.Write(&buf, binary.LittleEndian, uint32(v<<2)+2)
 			if err != nil {
 				return nil, err
