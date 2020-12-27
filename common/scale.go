@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint:unparam
+//nolint
 package common
 
 import (
@@ -402,8 +402,7 @@ func (pd Decoder) DecodeIntoReflectValue(target reflect.Value) error {
 	case reflect.Ptr:
 		isNil := target.IsNil()
 		if isNil {
-			// target.set
-			// return nil
+			return errors.New("target cannot be nil")
 		}
 		ptr := target.Elem()
 		err := pd.DecodeIntoReflectValue(ptr)
