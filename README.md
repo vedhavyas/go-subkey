@@ -27,14 +27,21 @@ Subkey port in Go
 ```go
     uri := "crowd swamp sniff machine grid pretty client emotion banana cricket flush soap//foo//42///password"
     scheme := sr25519.Scheme{}
-    kr, err := subkey.Derive(scheme, uri)
+    kr, err := subkey.DeriveKeyPair(scheme, uri)
 ```
 
 #### Hex encoded Seed
 ```go
     uri := "0x6ea8835d60351a39a1e2293b2902d7bd6e12e526e72c46f4fda4a233809c4379"
     scheme := sr25519.Scheme{}
-    kr, err := subkey.Derive(scheme, uri)
+    kr, err := subkey.DeriveKeyPair(scheme, uri)
+```
+
+#### Hex encoded Seed with derivation
+```go
+    uri := "0x6ea8835d60351a39a1e2293b2902d7bd6e12e526e72c46f4fda4a233809c4379//foo//42///password"
+    scheme := sr25519.Scheme{}
+    kr, err := subkey.DeriveKeyPair(scheme, uri)
 ```
 
 
