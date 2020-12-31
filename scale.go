@@ -13,10 +13,9 @@
 // limitations under the License.
 
 //nolint
-package common
+package subkey
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -53,7 +52,7 @@ func (pe Encoder) Write(bytes []byte) error {
 		return err
 	}
 	if c < len(bytes) {
-		return fmt.Errorf("Could not write %d bytes to writer", len(bytes))
+		return fmt.Errorf("could not write %d bytes to writer", len(bytes))
 	}
 	return nil
 }
@@ -634,14 +633,4 @@ func (o *OptionBool) Decode(decoder Decoder) error {
 		return fmt.Errorf("Unknown byte prefix for encoded OptionBool: %d", b)
 	}
 	return nil
-}
-
-// ToKeyedVec replicates the behaviour of Rust's to_keyed_vec helper.
-func ToKeyedVec(value interface{}, prependKey []byte) ([]byte, error) {
-	var buffer = bytes.NewBuffer(prependKey)
-	err := Encoder{buffer}.Encode(value)
-	if err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
 }

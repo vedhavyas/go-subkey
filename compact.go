@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package subkey
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ import (
 	"errors"
 )
 
-func CompactUint(v uint64) ([]byte, error) {
+func compactUint(v uint64) ([]byte, error) {
 	// This code was copied over and adapted with many thanks from Joystream/parity-codec-go:withreflect@develop
 	var buf bytes.Buffer
 	if v < 1<<30 {

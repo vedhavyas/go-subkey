@@ -1,4 +1,4 @@
-package common
+package subkey
 
 import (
 	"testing"
@@ -92,7 +92,7 @@ func TestSplitURI(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.suri, func(t *testing.T) {
-			phrase, path, password, err := SplitURI(c.suri)
+			phrase, path, password, err := splitURI(c.suri)
 			if err != nil {
 				assert.True(t, c.err)
 				return

@@ -1,4 +1,4 @@
-package common
+package subkey
 
 import (
 	"github.com/decred/base58"
