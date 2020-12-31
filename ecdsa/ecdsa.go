@@ -8,6 +8,7 @@ import (
 	"github.com/ChainSafe/go-schnorrkel"
 	secp256k1 "github.com/ethereum/go-ethereum/crypto"
 	"github.com/vedhavyas/go-subkey"
+	"github.com/vedhavyas/go-subkey/scale"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -103,7 +104,7 @@ func (s Scheme) Derive(pair subkey.KeyPair, djs []subkey.DeriveJunction) (subkey
 
 func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 	var buffer bytes.Buffer
-	d := subkey.NewEncoder(&buffer)
+	d := scale.NewEncoder(&buffer)
 	err := d.Encode("Secp256k1HDKD")
 	if err != nil {
 		return nil, err

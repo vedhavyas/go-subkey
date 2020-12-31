@@ -13,7 +13,7 @@
 // limitations under the License.
 
 //nolint
-package subkey
+package scale
 
 import (
 	"encoding/binary"
