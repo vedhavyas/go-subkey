@@ -13,8 +13,8 @@ type Scheme interface {
 	Derive(pair KeyPair, djs []DeriveJunction) (KeyPair, error)
 }
 
-// Derive derives the Keypair from the URI using the provided cryptography scheme.
-func Derive(scheme Scheme, uri string) (kp KeyPair, err error) {
+// DeriveKeyPair derives the Keypair from the URI using the provided cryptography scheme.
+func DeriveKeyPair(scheme Scheme, uri string) (kp KeyPair, err error) {
 	phrase, path, pwd, err := splitURI(uri)
 	if err != nil {
 		return nil, err

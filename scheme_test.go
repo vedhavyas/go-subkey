@@ -196,7 +196,7 @@ func TestDerive(t *testing.T) {
 	for scheme, tests := range testsMap {
 		for _, c := range tests {
 			t.Run(fmt.Sprintf("%s-%s", scheme, c.uri), func(t *testing.T) {
-				s, err := subkey.Derive(scheme, c.uri)
+				s, err := subkey.DeriveKeyPair(scheme, c.uri)
 				if err != nil {
 					assert.True(t, c.err)
 					return

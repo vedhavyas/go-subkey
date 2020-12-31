@@ -18,7 +18,7 @@ func main() {
 		panic(fmt.Errorf("invalid hex"))
 	}
 
-	kr, err := subkey.Derive(sr25519.Scheme{}, *s)
+	kr, err := subkey.DeriveKeyPair(sr25519.Scheme{}, *s)
 	if err != nil {
 		panic(err)
 	}
