@@ -1,4 +1,6 @@
 # go-subkey
+[![Go Reference](https://pkg.go.dev/badge/github.com/vedhavyas/go-subkey.svg)](https://pkg.go.dev/github.com/vedhavyas/go-subkey)
+
 Subkey port in Go
 
 ## Usage
