@@ -13,10 +13,9 @@
 // limitations under the License.
 
 //nolint
-package common
+package subkey
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -53,7 +52,7 @@ func (pe Encoder) Write(bytes []byte) error {
 		return err
 	}
 	if c < len(bytes) {
-		return fmt.Errorf("Could not write %d bytes to writer", len(bytes))
+		return fmt.Errorf("could not write %d bytes to writer", len(bytes))
 	}
 	return nil
 }
@@ -74,7 +73,7 @@ func (pe Encoder) PushByte(b byte) error {
 // Rust implementation: see impl<'a> Encode for CompactRef<'a, u64>
 func (pe Encoder) EncodeUintCompact(v big.Int) error {
 	if v.Sign() == -1 {
-		return errors.New("Assertion error: EncodeUintCompact cannot process negative numbers")
+		return errors.New("assertion error: EncodeUintCompact cannot process negative numbers")
 	}
 
 	if v.IsUint64() {
@@ -101,20 +100,20 @@ func (pe Encoder) EncodeUintCompact(v big.Int) error {
 
 	numBytes := len(v.Bytes())
 	if numBytes > 255 {
-		return errors.New("Assertion error: numBytes>255 exeeds allowed for length prefix")
+		return errors.New("assertion error: numBytes>255 exeeds allowed for length prefix")
 	}
 	topSixBits := uint8(numBytes - 4)
 	lengthByte := topSixBits<<2 + 3
 
 	if topSixBits > 63 {
-		return errors.New("Assertion error: n<=63 needed to compact-encode substrate unsigned big integer")
+		return errors.New("assertion error: n<=63 needed to compact-encode substrate unsigned big integer")
 	}
 	err := pe.PushByte(lengthByte)
 	if err != nil {
 		return err
 	}
 	buf := v.Bytes()
-	Reverse(buf)
+	reverse(buf)
 	err = pe.Write(buf)
 	if err != nil {
 		return err
@@ -176,7 +175,7 @@ func (pe Encoder) Encode(value interface{}) error {
 	case reflect.Ptr:
 		rv := reflect.ValueOf(value)
 		if rv.IsNil() {
-			return errors.New("Encoding null pointers not supported; consider using Option type")
+			return errors.New("encoding null pointers not supported; consider using Option type")
 		} else {
 			dereferenced := rv.Elem()
 			err := pe.Encode(dereferenced.Interface())
@@ -202,7 +201,7 @@ func (pe Encoder) Encode(value interface{}) error {
 		l := rv.Len()
 		len64 := uint64(l)
 		if len64 > math.MaxUint32 {
-			return errors.New("Attempted to serialize a collection with too many elements.")
+			return errors.New("attempted to serialize a collection with too many elements")
 		}
 		err := pe.EncodeUintCompact(*big.NewInt(0).SetUint64(len64))
 		if err != nil {
@@ -254,7 +253,7 @@ func (pe Encoder) Encode(value interface{}) error {
 	case reflect.UnsafePointer:
 		fallthrough
 	case reflect.Invalid:
-		return fmt.Errorf("Type %s cannot be encoded", t.Kind())
+		return fmt.Errorf("type %s cannot be encoded", t.Kind())
 	default:
 		log.Println("not captured")
 	}
@@ -297,7 +296,7 @@ func (pd Decoder) Read(bytes []byte) error {
 		return err
 	}
 	if c < len(bytes) {
-		return fmt.Errorf("Cannot read the required number of bytes %d, only %d available", len(bytes), c)
+		return fmt.Errorf("cannot read the required number of bytes %d, only %d available", len(bytes), c)
 	}
 	return nil
 }
@@ -317,11 +316,11 @@ func (pd Decoder) ReadOneByte() (byte, error) {
 func (pd Decoder) Decode(target interface{}) error {
 	t0 := reflect.TypeOf(target)
 	if t0.Kind() != reflect.Ptr {
-		return errors.New("Target must be a pointer, but was " + fmt.Sprint(t0))
+		return errors.New("target must be a pointer, but was " + fmt.Sprint(t0))
 	}
 	val := reflect.ValueOf(target)
 	if val.IsNil() {
-		return errors.New("Target is a nil pointer")
+		return errors.New("target is a nil pointer")
 	}
 	return pd.DecodeIntoReflectValue(val.Elem())
 }
@@ -330,7 +329,7 @@ func (pd Decoder) Decode(target interface{}) error {
 func (pd Decoder) DecodeIntoReflectValue(target reflect.Value) error {
 	t := target.Type()
 	if !target.CanSet() {
-		return fmt.Errorf("Unsettable value %v", t)
+		return fmt.Errorf("unsettable value %v", t)
 	}
 
 	// If the type implements decodeable, use that implementation
@@ -424,19 +423,19 @@ func (pd Decoder) DecodeIntoReflectValue(target reflect.Value) error {
 	case reflect.Slice:
 		codedLen64, _ := pd.DecodeUintCompact()
 		if codedLen64.Uint64() > math.MaxUint32 {
-			return errors.New("Encoded array length is higher than allowed by the protocol (32-bit unsigned integer)")
+			return errors.New("encoded array length is higher than allowed by the protocol (32-bit unsigned integer)")
 		}
 		if codedLen64.Uint64() > uint64(maxInt) {
-			return errors.New("Encoded array length is higher than allowed by the platform")
+			return errors.New("encoded array length is higher than allowed by the platform")
 		}
 		codedLen := int(codedLen64.Uint64())
 		targetLen := target.Len()
 		if codedLen != targetLen {
-			if int(codedLen) > target.Cap() {
-				newSlice := reflect.MakeSlice(t, int(codedLen), int(codedLen))
+			if codedLen > target.Cap() {
+				newSlice := reflect.MakeSlice(t, codedLen, codedLen)
 				target.Set(newSlice)
 			} else {
-				target.SetLen(int(codedLen))
+				target.SetLen(codedLen)
 			}
 		}
 		for i := 0; i < codedLen; i++ {
@@ -485,7 +484,7 @@ func (pd Decoder) DecodeIntoReflectValue(target reflect.Value) error {
 	case reflect.UnsafePointer:
 		fallthrough
 	case reflect.Invalid:
-		return fmt.Errorf("Type %s cannot be decoded", t.Kind())
+		return fmt.Errorf("type %s cannot be decoded", t.Kind())
 	}
 	return nil
 }
@@ -527,22 +526,22 @@ func (pd Decoder) DecodeUintCompact() (*big.Int, error) {
 		l := b >> 2
 
 		if l > 63 { // Max upper bound of 536 is (67 - 4)
-			return nil, errors.New("Not supported: l>63 encountered when decoding a compact-encoded uint")
+			return nil, errors.New("not supported: l>63 encountered when decoding a compact-encoded uint")
 		}
 		buf := make([]byte, l+4)
 		err := pd.Read(buf)
 		if err != nil {
 			return nil, err
 		}
-		Reverse(buf)
+		reverse(buf)
 		return new(big.Int).SetBytes(buf), nil
 	default:
-		return nil, errors.New("Code should be unreachable")
+		return nil, errors.New("code should be unreachable")
 	}
 }
 
-// Reverse reverses bytes in place (manipulates the underlying array)
-func Reverse(b []byte) {
+// reverse reverses bytes in place (manipulates the underlying array)
+func reverse(b []byte) {
 	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
 		b[i], b[j] = b[j], b[i]
 	}
@@ -580,68 +579,4 @@ type Encodeable interface {
 type Decodeable interface {
 	// ParityDecode populates this structure from a stream (overwriting the current contents), return false on failure
 	Decode(decoder Decoder) error
-}
-
-// OptionBool is a structure that can store a boolean or a missing value.
-// Note that encoding rules are slightly different from other "Option" fields.
-type OptionBool struct {
-	hasValue bool
-	value    bool
-}
-
-// NewOptionBoolEmpty creates an OptionBool without a value.
-func NewOptionBoolEmpty() OptionBool {
-	return OptionBool{false, false}
-}
-
-// NewOptionBool creates an OptionBool with a value.
-func NewOptionBool(value bool) OptionBool {
-	return OptionBool{true, value}
-}
-
-// ParityEncode implements encoding for OptionBool as per Rust implementation.
-func (o OptionBool) Encode(encoder Encoder) error {
-	var err error
-	if !o.hasValue {
-		err = encoder.PushByte(0)
-	} else {
-		if o.value {
-			err = encoder.PushByte(1)
-		} else {
-			err = encoder.PushByte(2)
-		}
-	}
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// ParityDecode implements decoding for OptionBool as per Rust implementation.
-func (o *OptionBool) Decode(decoder Decoder) error {
-	b, _ := decoder.ReadOneByte()
-	switch b {
-	case 0:
-		o.hasValue = false
-		o.value = false
-	case 1:
-		o.hasValue = true
-		o.value = true
-	case 2:
-		o.hasValue = true
-		o.value = false
-	default:
-		return fmt.Errorf("Unknown byte prefix for encoded OptionBool: %d", b)
-	}
-	return nil
-}
-
-// ToKeyedVec replicates the behaviour of Rust's to_keyed_vec helper.
-func ToKeyedVec(value interface{}, prependKey []byte) ([]byte, error) {
-	var buffer = bytes.NewBuffer(prependKey)
-	err := Encoder{buffer}.Encode(value)
-	if err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
 }

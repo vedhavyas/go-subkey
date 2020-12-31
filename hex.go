@@ -1,4 +1,4 @@
-package common
+package subkey
 
 import (
 	"encoding/hex"
@@ -7,7 +7,7 @@ import (
 
 // DecodeHex decodes the hex string to bytes.
 // `0x` prefix is accepted.
-func DecodeHex(uri string) (seed []byte, ok bool) {
+func DecodeHex(uri string) ([]byte, bool) {
 	if strings.HasPrefix(uri, "0x") {
 		uri = strings.TrimPrefix(uri, "0x")
 	}
@@ -15,6 +15,8 @@ func DecodeHex(uri string) (seed []byte, ok bool) {
 	return res, err == nil
 }
 
+// EncodeHex encodes bytes to hex
+// `0x` prefix is added.
 func EncodeHex(b []byte) string {
 	res := hex.EncodeToString(b)
 	if !strings.HasPrefix(res, "0x") {

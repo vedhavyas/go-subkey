@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/ChainSafe/go-schnorrkel"
-	"github.com/vedhavyas/go-subkey/common"
+	"github.com/vedhavyas/go-subkey"
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/ed25519"
 )
@@ -38,11 +38,11 @@ func (kr keyRing) AccountID() []byte {
 }
 
 func (kr keyRing) SS58Address(network uint8) (string, error) {
-	return common.SS58Address(kr.AccountID(), network)
+	return subkey.SS58Address(kr.AccountID(), network)
 }
 
 func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
-	return common.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
+	return subkey.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
 }
 
 type Scheme struct{}
@@ -51,7 +51,7 @@ func (s Scheme) String() string {
 	return "Ed25519"
 }
 
-func (s Scheme) Generate() (common.KeyPair, error) {
+func (s Scheme) Generate() (subkey.KeyPair, error) {
 	pub, secret, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (s Scheme) Generate() (common.KeyPair, error) {
 	}, nil
 }
 
-func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
+func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 	secret := ed25519.NewKeyFromSeed(seed)
 	pub := secret.Public().(ed25519.PublicKey)
 	return keyRing{
@@ -72,7 +72,7 @@ func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 	}, nil
 }
 
-func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
+func (s Scheme) FromPhrase(phrase, pwd string) (subkey.KeyPair, error) {
 	seed, err := schnorrkel.SeedFromMnemonic(phrase, pwd)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
 	return s.FromSeed(seed[:32])
 }
 
-func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error) {
+func (s Scheme) Derive(pair subkey.KeyPair, djs []subkey.DeriveJunction) (subkey.KeyPair, error) {
 	acc := pair.(keyRing).secret.Seed()
 	var err error
 	for _, dj := range djs {
@@ -100,7 +100,7 @@ func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common
 
 func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 	var buffer bytes.Buffer
-	d := common.NewEncoder(&buffer)
+	d := subkey.NewEncoder(&buffer)
 	err := d.Encode("Ed25519HDKD")
 	if err != nil {
 		return nil, err

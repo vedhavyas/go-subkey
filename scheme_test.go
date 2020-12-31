@@ -1,4 +1,4 @@
-package subkey
+package subkey_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vedhavyas/go-subkey/common"
+	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/ecdsa"
 	"github.com/vedhavyas/go-subkey/ed25519"
 	"github.com/vedhavyas/go-subkey/sr25519"
@@ -15,7 +15,7 @@ import (
 
 //nolint:funlen
 func TestDerive(t *testing.T) {
-	testsMap := map[Scheme][]struct {
+	testsMap := map[subkey.Scheme][]struct {
 		uri       string
 		seed      string
 		publicKey string
@@ -196,18 +196,18 @@ func TestDerive(t *testing.T) {
 	for scheme, tests := range testsMap {
 		for _, c := range tests {
 			t.Run(fmt.Sprintf("%s-%s", scheme, c.uri), func(t *testing.T) {
-				s, err := Derive(scheme, c.uri)
+				s, err := subkey.DeriveKeyPair(scheme, c.uri)
 				if err != nil {
 					assert.True(t, c.err)
 					return
 				}
 
 				pub := s.Public()
-				assert.Equal(t, c.publicKey, common.EncodeHex(pub))
+				assert.Equal(t, c.publicKey, subkey.EncodeHex(pub))
 				if c.accountID != "" {
-					assert.Equal(t, c.accountID, common.EncodeHex(s.AccountID()))
+					assert.Equal(t, c.accountID, subkey.EncodeHex(s.AccountID()))
 				}
-				seed := common.EncodeHex(s.Seed())
+				seed := subkey.EncodeHex(s.Seed())
 				if s.Seed() == nil {
 					seed = ""
 				}
@@ -222,7 +222,7 @@ func TestDerive(t *testing.T) {
 
 func Test_Generate_Sign_Verify(t *testing.T) {
 	msg := []byte(strings.Repeat("as", rand.Intn(100))) //nolint:gosec
-	verify := func(kr common.KeyPair) {
+	verify := func(kr subkey.KeyPair) {
 		sig, err := kr.Sign(msg)
 		assert.NoError(t, err)
 		assert.True(t, kr.Verify(msg, sig))

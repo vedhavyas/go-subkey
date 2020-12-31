@@ -5,7 +5,7 @@ import (
 
 	sr25519 "github.com/ChainSafe/go-schnorrkel"
 	"github.com/gtank/merlin"
-	"github.com/vedhavyas/go-subkey/common"
+	"github.com/vedhavyas/go-subkey"
 )
 
 const (
@@ -61,11 +61,11 @@ func (kr keyRing) AccountID() []byte {
 }
 
 func (kr keyRing) SS58Address(network uint8) (string, error) {
-	return common.SS58Address(kr.AccountID(), network)
+	return subkey.SS58Address(kr.AccountID(), network)
 }
 
 func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
-	return common.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
+	return subkey.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
 }
 
 func deriveKeySoft(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.SecretKey, error) {
@@ -96,7 +96,7 @@ func (s Scheme) String() string {
 	return "Sr25519"
 }
 
-func (s Scheme) Generate() (common.KeyPair, error) {
+func (s Scheme) Generate() (subkey.KeyPair, error) {
 	ms, err := sr25519.GenerateMiniSecretKey()
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (s Scheme) Generate() (common.KeyPair, error) {
 	}, nil
 }
 
-func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
+func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 	switch len(seed) {
 	case miniSecretKeyLength:
 		var mss [32]byte
@@ -152,7 +152,7 @@ func (s Scheme) FromSeed(seed []byte) (common.KeyPair, error) {
 	return nil, errors.New("invalid seed length")
 }
 
-func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
+func (s Scheme) FromPhrase(phrase, pwd string) (subkey.KeyPair, error) {
 	ms, err := sr25519.MiniSecretFromMnemonic(phrase, pwd)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (s Scheme) FromPhrase(phrase, pwd string) (common.KeyPair, error) {
 	}, nil
 }
 
-func (s Scheme) Derive(pair common.KeyPair, djs []common.DeriveJunction) (common.KeyPair, error) {
+func (s Scheme) Derive(pair subkey.KeyPair, djs []subkey.DeriveJunction) (subkey.KeyPair, error) {
 	kr := pair.(keyRing)
 	secret := kr.secret
 	seed := kr.seed

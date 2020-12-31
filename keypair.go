@@ -1,6 +1,6 @@
-package common
+package subkey
 
-// KeyPair is the secret and public key
+// KeyPair can sign, verify using a seed and public key
 type KeyPair interface {
 	Signer
 	Verifier
@@ -27,12 +27,12 @@ type KeyPair interface {
 	SS58AddressWithAccountIDChecksum(network uint8) (string, error)
 }
 
+// Signer signs the message and returns the signature.
 type Signer interface {
-	// Sign signs the message and returns the signature.
 	Sign(msg []byte) ([]byte, error)
 }
 
+// Verifier verifies the signature.
 type Verifier interface {
-	// Verify verifies the signature.
 	Verify(msg []byte, signature []byte) bool
 }

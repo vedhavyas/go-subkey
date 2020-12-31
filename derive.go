@@ -1,4 +1,4 @@
-package common
+package subkey
 
 import (
 	"encoding/binary"
@@ -24,12 +24,11 @@ var (
 )
 
 type DeriveJunction struct {
-	Path      string
 	ChainCode [32]byte
 	IsHard    bool
 }
 
-func DeriveJunctions(codes []string) (djs []DeriveJunction, err error) {
+func deriveJunctions(codes []string) (djs []DeriveJunction, err error) {
 	for _, code := range codes {
 		dj, err := parseDeriveJunction(code)
 		if err != nil {
@@ -55,7 +54,7 @@ func parseDeriveJunction(code string) (DeriveJunction, error) {
 		bc = make([]byte, 8)
 		binary.LittleEndian.PutUint64(bc, u64)
 	} else {
-		cl, err := CompactUint(uint64(len(code)))
+		cl, err := compactUint(uint64(len(code)))
 		if err != nil {
 			return jd, err
 		}
@@ -69,11 +68,10 @@ func parseDeriveJunction(code string) (DeriveJunction, error) {
 	}
 
 	copy(jd.ChainCode[:len(bc)], bc)
-	jd.Path = code
 	return jd, nil
 }
 
-func DerivePath(path string) (parts []string) {
+func derivePath(path string) (parts []string) {
 	res := reJunction.FindAllStringSubmatch(path, -1)
 	for _, p := range res {
 		parts = append(parts, p[1])
@@ -81,7 +79,7 @@ func DerivePath(path string) (parts []string) {
 	return parts
 }
 
-func SplitURI(suri string) (phrase string, pathMap string, password string, err error) {
+func splitURI(suri string) (phrase string, pathMap string, password string, err error) {
 	res := re.FindStringSubmatch(suri)
 	if res == nil {
 		return phrase, pathMap, password, errors.New("invalid URI format")

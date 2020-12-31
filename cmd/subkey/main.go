@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/hex"
-	"errors"
 	"flag"
 	"fmt"
-	"strings"
 
 	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/sr25519"
@@ -16,12 +13,12 @@ func main() {
 	m := flag.String("msg", "", "Message to be signed in Hex")
 	flag.Parse()
 
-	msg, err := decodeHex(*m)
-	if err != nil {
-		panic(err)
+	msg, ok := subkey.DecodeHex(*m)
+	if !ok {
+		panic(fmt.Errorf("invalid hex"))
 	}
 
-	kr, err := subkey.Derive(sr25519.Scheme{}, *s)
+	kr, err := subkey.DeriveKeyPair(sr25519.Scheme{}, *s)
 	if err != nil {
 		panic(err)
 	}
@@ -32,12 +29,4 @@ func main() {
 	}
 
 	fmt.Println(kr.Verify(msg, sig))
-}
-
-func decodeHex(data string) ([]byte, error) {
-	data = strings.TrimPrefix(strings.TrimSpace(data), "0x")
-	if data == "" {
-		return nil, errors.New("empty string")
-	}
-	return hex.DecodeString(data)
 }
