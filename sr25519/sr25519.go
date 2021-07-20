@@ -153,7 +153,7 @@ func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 }
 
 func (s Scheme) FromPhrase(phrase, pwd string) (subkey.KeyPair, error) {
-	ms, err := sr25519.MiniSecretFromMnemonic(phrase, pwd)
+	ms, err := sr25519.MiniSecretKeyFromMnemonic(phrase, pwd)
 	if err != nil {
 		return nil, err
 	}

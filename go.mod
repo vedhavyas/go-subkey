@@ -3,7 +3,7 @@ module github.com/vedhavyas/go-subkey
 go 1.13
 
 require (
-	github.com/ChainSafe/go-schnorrkel v0.0.0-20201021020641-d3c6d3118d10
+	github.com/ChainSafe/go-schnorrkel v0.0.0-20210713215043-76165a18546d
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/decred/base58 v1.0.3
 	github.com/ethereum/go-ethereum v1.9.25
