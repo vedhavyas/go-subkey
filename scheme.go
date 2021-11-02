@@ -29,7 +29,7 @@ func DeriveKeyPair(scheme Scheme, uri string) (kp KeyPair, err error) {
 		return nil, err
 	}
 
-	djs, err := deriveJunctions(derivePath(path))
+	djs, err := DeriveJunctions(DerivePath(path))
 	if err != nil {
 		return nil, err
 	}

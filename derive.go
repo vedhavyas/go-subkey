@@ -28,7 +28,7 @@ type DeriveJunction struct {
 	IsHard    bool
 }
 
-func deriveJunctions(codes []string) (djs []DeriveJunction, err error) {
+func DeriveJunctions(codes []string) (djs []DeriveJunction, err error) {
 	for _, code := range codes {
 		dj, err := parseDeriveJunction(code)
 		if err != nil {
@@ -71,7 +71,7 @@ func parseDeriveJunction(code string) (DeriveJunction, error) {
 	return jd, nil
 }
 
-func derivePath(path string) (parts []string) {
+func DerivePath(path string) (parts []string) {
 	res := reJunction.FindAllStringSubmatch(path, -1)
 	for _, p := range res {
 		parts = append(parts, p[1])
