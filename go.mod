@@ -1,4 +1,4 @@
-module github.com/vedhavyas/go-subkey
+module github.com/amintalebi/go-subkey
 
 go 1.13
 

@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/vedhavyas/go-subkey"
-	"github.com/vedhavyas/go-subkey/sr25519"
+	"github.com/amintalebi/go-subkey"
+	"github.com/amintalebi/go-subkey/sr25519"
 )
 
 func main() {

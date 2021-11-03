@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	sr25519 "github.com/ChainSafe/go-schnorrkel"
+	"github.com/amintalebi/go-subkey"
 	"github.com/gtank/merlin"
-	"github.com/vedhavyas/go-subkey"
 )
 
 const (
