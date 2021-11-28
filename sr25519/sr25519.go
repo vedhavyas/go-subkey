@@ -39,7 +39,12 @@ func (kr keyRing) Verify(msg []byte, signature []byte) bool {
 	if err := sig.Decode(sigs); err != nil {
 		return false
 	}
-	return kr.pub.Verify(sig, signingContext(msg))
+	ok, err := kr.pub.Verify(sig, signingContext(msg))
+	if err != nil || !ok {
+		return false
+	}
+
+	return true
 }
 
 func signingContext(msg []byte) *merlin.Transcript {
