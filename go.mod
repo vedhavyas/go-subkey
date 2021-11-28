@@ -3,7 +3,7 @@ module github.com/vedhavyas/go-subkey
 go 1.17
 
 require (
-	github.com/ChainSafe/go-schnorrkel v0.0.0-20201021020641-d3c6d3118d10
+	github.com/ChainSafe/go-schnorrkel v0.0.0-20210713215043-76165a18546d
 	github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
