@@ -12,9 +12,32 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
+type pubKey struct {
+	key *ecdsa.PublicKey
+}
+
+func (pub pubKey) Verify(msg []byte, signature []byte) bool {
+	digest := blake2b.Sum256(msg)
+	signature = signature[:64]
+	return secp256k1.VerifySignature(pub.Public(), digest[:], signature)
+}
+
+func (pub pubKey) Public() []byte {
+	return secp256k1.CompressPubkey(pub.key)
+}
+
+func (pub pubKey) AccountID() []byte {
+	account := blake2b.Sum256(pub.Public())
+	return account[:]
+}
+
+func (pub pubKey) SS58Address(network uint16) string {
+	return subkey.SS58Encode(pub.AccountID(), network)
+}
+
 type keyRing struct {
 	secret *ecdsa.PrivateKey
-	pub    *ecdsa.PublicKey
+	pub    pubKey
 }
 
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
@@ -23,9 +46,7 @@ func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 }
 
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
-	digest := blake2b.Sum256(msg)
-	signature = signature[:64]
-	return secp256k1.VerifySignature(kr.Public(), digest[:], signature)
+	return kr.pub.Verify(msg, signature)
 }
 
 func (kr keyRing) Seed() []byte {
@@ -33,16 +54,15 @@ func (kr keyRing) Seed() []byte {
 }
 
 func (kr keyRing) Public() []byte {
-	return secp256k1.CompressPubkey(kr.pub)
+	return kr.pub.Public()
 }
 
 func (kr keyRing) AccountID() []byte {
-	account := blake2b.Sum256(kr.Public())
-	return account[:]
+	return kr.pub.AccountID()
 }
 
 func (kr keyRing) SS58Address(network uint16) string {
-	return subkey.SS58Encode(kr.AccountID(), network)
+	return kr.pub.SS58Address(network)
 }
 
 type Scheme struct{}
@@ -59,7 +79,7 @@ func (s Scheme) Generate() (subkey.KeyPair, error) {
 
 	return keyRing{
 		secret: secret,
-		pub:    secret.Public().(*ecdsa.PublicKey),
+		pub:    pubKey{key: secret.Public().(*ecdsa.PublicKey)},
 	}, nil
 }
 
@@ -68,7 +88,7 @@ func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 	pub := secret.Public().(*ecdsa.PublicKey)
 	return keyRing{
 		secret: secret,
-		pub:    pub,
+		pub:    pubKey{key: pub},
 	}, nil
 }
 
@@ -117,4 +137,12 @@ func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 
 	seed := blake2b.Sum256(buffer.Bytes())
 	return seed[:], nil
+}
+
+func (s Scheme) FromPublicKey(bytes []byte) (subkey.PublicKey, error) {
+	key, err := secp256k1.DecompressPubkey(bytes)
+	if err != nil {
+		return nil, err
+	}
+	return pubKey{key: key}, nil
 }

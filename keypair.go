@@ -1,12 +1,8 @@
 package subkey
 
-// KeyPair can sign, verify using a seed and public key
-type KeyPair interface {
-	Signer
+// PublicKey can verify and be converted to SS58 addresses
+type PublicKey interface {
 	Verifier
-
-	// Seed returns the seed of the pair
-	Seed() []byte
 
 	// Public returns the pub key in bytes.
 	Public() []byte
@@ -16,6 +12,15 @@ type KeyPair interface {
 
 	// SS58Address returns the Base58 public key with checksum and network identifier.
 	SS58Address(network uint16) string
+}
+
+// KeyPair can sign, verify using a seed and public key
+type KeyPair interface {
+	Signer
+	PublicKey
+
+	// Seed returns the seed of the pair
+	Seed() []byte
 }
 
 // Signer signs the message and returns the signature.

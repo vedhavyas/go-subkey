@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-// Decodes an SS58 address into its public key and format.
+// Decodes an SS58 checksumed value into its data and format.
 func SS58Decode(address string) (uint16, []byte, error) {
 	// Adapted from https://github.com/paritytech/substrate/blob/e6def65920d30029e42d498cb07cec5dd433b927/primitives/core/src/crypto.rs#L264
 
@@ -43,7 +43,7 @@ func SS58Decode(address string) (uint16, []byte, error) {
 	return ident, data[prefixLen : len(data)-CHECKSUM_LEN], nil
 }
 
-// Encodes a public key and format identifier to an SS58 address string.
+// Encodes data and format identifier to an SS58 checksummed string.
 func SS58Encode(pubkey []byte, format uint16) string {
 	// Adapted from https://github.com/paritytech/substrate/blob/e6def65920d30029e42d498cb07cec5dd433b927/primitives/core/src/crypto.rs#L319
 	ident := format & 0b0011_1111_1111_1111
