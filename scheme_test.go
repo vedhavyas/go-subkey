@@ -21,7 +21,7 @@ func TestDerive(t *testing.T) {
 		publicKey string
 		accountID string
 		ss58Addr  string
-		network   uint8
+		network   uint16
 		err       bool
 	}{
 		sr25519.Scheme{}: {
@@ -212,8 +212,7 @@ func TestDerive(t *testing.T) {
 					seed = ""
 				}
 				assert.Equal(t, c.seed, seed)
-				gotSS58Addr, err := s.SS58Address(c.network)
-				assert.NoError(t, err)
+				gotSS58Addr := s.SS58Address(c.network)
 				assert.Equal(t, c.ss58Addr, gotSS58Addr)
 			})
 		}

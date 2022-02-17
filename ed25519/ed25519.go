@@ -38,12 +38,8 @@ func (kr keyRing) AccountID() []byte {
 	return kr.Public()
 }
 
-func (kr keyRing) SS58Address(network uint8) (string, error) {
-	return subkey.SS58Address(kr.AccountID(), network)
-}
-
-func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
-	return subkey.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
+func (kr keyRing) SS58Address(network uint16) string {
+	return subkey.SS58Encode(kr.AccountID(), network)
 }
 
 type Scheme struct{}
