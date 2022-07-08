@@ -11,6 +11,7 @@ type Scheme interface {
 	FromSeed(seed []byte) (KeyPair, error)
 	FromPhrase(phrase, password string) (KeyPair, error)
 	Derive(pair KeyPair, djs []DeriveJunction) (KeyPair, error)
+	FromPublicKey([]byte) (PublicKey, error)
 }
 
 // DeriveKeyPair derives the Keypair from the URI using the provided cryptography scheme.

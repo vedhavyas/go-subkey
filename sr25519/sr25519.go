@@ -2,6 +2,7 @@ package sr25519
 
 import (
 	"errors"
+	"fmt"
 
 	sr25519 "github.com/ChainSafe/go-schnorrkel"
 	"github.com/gtank/merlin"
@@ -53,8 +54,8 @@ func signingContext(msg []byte) *merlin.Transcript {
 
 // Public returns the public key in bytes
 func (kr keyRing) Public() []byte {
-	pub := kr.pub.Encode()
-	return pub[:]
+	bytes := kr.pub.Encode()
+	return bytes[:]
 }
 
 func (kr keyRing) Seed() []byte {
@@ -65,12 +66,8 @@ func (kr keyRing) AccountID() []byte {
 	return kr.Public()
 }
 
-func (kr keyRing) SS58Address(network uint8) (string, error) {
-	return subkey.SS58Address(kr.AccountID(), network)
-}
-
-func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
-	return subkey.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
+func (kr keyRing) SS58Address(network uint16) string {
+	return subkey.SS58Encode(kr.AccountID(), network)
 }
 
 func deriveKeySoft(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.SecretKey, error) {
@@ -210,4 +207,18 @@ func (s Scheme) Derive(pair subkey.KeyPair, djs []subkey.DeriveJunction) (subkey
 	}
 
 	return &keyRing{seed: seed, secret: secret, pub: pub}, nil
+}
+
+func (s Scheme) FromPublicKey(bytes []byte) (subkey.PublicKey, error) {
+	if len(bytes) != 32 {
+		return nil, fmt.Errorf("expected 32 bytes")
+	}
+	arr := [32]byte{}
+	copy(arr[:], bytes[:32])
+	key, err := sr25519.NewPublicKey(arr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &keyRing{pub: key}, nil
 }

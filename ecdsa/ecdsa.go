@@ -41,12 +41,8 @@ func (kr keyRing) AccountID() []byte {
 	return account[:]
 }
 
-func (kr keyRing) SS58Address(network uint8) (string, error) {
-	return subkey.SS58Address(kr.AccountID(), network)
-}
-
-func (kr keyRing) SS58AddressWithAccountIDChecksum(network uint8) (string, error) {
-	return subkey.SS58AddressWithAccountIDChecksum(kr.AccountID(), network)
+func (kr keyRing) SS58Address(network uint16) string {
+	return subkey.SS58Encode(kr.AccountID(), network)
 }
 
 type Scheme struct{}
@@ -121,4 +117,13 @@ func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 
 	seed := blake2b.Sum256(buffer.Bytes())
 	return seed[:], nil
+}
+
+func (s Scheme) FromPublicKey(bytes []byte) (subkey.PublicKey, error) {
+	key, err := secp256k1.DecompressPubkey(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &keyRing{pub: key}, nil
 }
