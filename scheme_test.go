@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vedhavyas/go-subkey"
-	"github.com/vedhavyas/go-subkey/ecdsa"
-	"github.com/vedhavyas/go-subkey/ed25519"
-	"github.com/vedhavyas/go-subkey/sr25519"
+	"github.com/vedhavyas/go-subkey/v2"
+	"github.com/vedhavyas/go-subkey/v2/ecdsa"
+	"github.com/vedhavyas/go-subkey/v2/ed25519"
+	"github.com/vedhavyas/go-subkey/v2/sr25519"
 )
 
 //nolint:funlen

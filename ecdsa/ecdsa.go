@@ -7,8 +7,8 @@ import (
 
 	"github.com/ChainSafe/go-schnorrkel"
 	secp256k1 "github.com/ethereum/go-ethereum/crypto"
-	"github.com/vedhavyas/go-subkey"
-	"github.com/vedhavyas/go-subkey/scale"
+	"github.com/vedhavyas/go-subkey/v2"
+	"github.com/vedhavyas/go-subkey/v2/scale"
 	"golang.org/x/crypto/blake2b"
 )
 

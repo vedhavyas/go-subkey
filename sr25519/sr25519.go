@@ -6,7 +6,7 @@ import (
 
 	sr25519 "github.com/ChainSafe/go-schnorrkel"
 	"github.com/gtank/merlin"
-	"github.com/vedhavyas/go-subkey"
+	"github.com/vedhavyas/go-subkey/v2"
 )
 
 const (
