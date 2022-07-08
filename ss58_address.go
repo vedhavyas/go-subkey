@@ -8,13 +8,13 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-// Decodes an SS58 checksumed value into its data and format.
+// SS58Decode decodes an SS58 checksumed value into its data and format.
 func SS58Decode(address string) (uint16, []byte, error) {
 	// Adapted from https://github.com/paritytech/substrate/blob/e6def65920d30029e42d498cb07cec5dd433b927/primitives/core/src/crypto.rs#L264
 
 	data := base58.Decode(address)
 	if len(data) < 2 {
-		return 0, []byte{}, fmt.Errorf("expected at least 2 bytes in base58 decoded address")
+		return 0, nil, fmt.Errorf("expected at least 2 bytes in base58 decoded address")
 	}
 
 	prefixLen := int8(0)
@@ -28,22 +28,22 @@ func SS58Decode(address string) (uint16, []byte, error) {
 		prefixLen = 2
 		ident = uint16(lower) | (uint16(upper) << 8)
 	} else {
-		return 0, []byte{}, fmt.Errorf("invalid address")
+		return 0, nil, fmt.Errorf("invalid address")
 	}
 
-	CHECKSUM_LEN := 2
-	hash := ss58hash(data[:len(data)-CHECKSUM_LEN])
-	checksum := hash[:CHECKSUM_LEN]
+	checkSumLength := 2
+	hash := ss58hash(data[:len(data)-checkSumLength])
+	checksum := hash[:checkSumLength]
 
-	given_checksum := data[len(data)-CHECKSUM_LEN:]
-	if !bytes.Equal(given_checksum, checksum) {
-		return 0, []byte{}, fmt.Errorf("checksum mismatch: expected %v but got %v", checksum, given_checksum)
+	givenChecksum := data[len(data)-checkSumLength:]
+	if !bytes.Equal(givenChecksum, checksum) {
+		return 0, nil, fmt.Errorf("checksum mismatch: expected %v but got %v", checksum, givenChecksum)
 	}
 
-	return ident, data[prefixLen : len(data)-CHECKSUM_LEN], nil
+	return ident, data[prefixLen : len(data)-checkSumLength], nil
 }
 
-// Encodes data and format identifier to an SS58 checksummed string.
+// SS58Encode encodes data and format identifier to an SS58 checksumed string.
 func SS58Encode(pubkey []byte, format uint16) string {
 	// Adapted from https://github.com/paritytech/substrate/blob/e6def65920d30029e42d498cb07cec5dd433b927/primitives/core/src/crypto.rs#L319
 	ident := format & 0b0011_1111_1111_1111
@@ -67,6 +67,6 @@ func SS58Encode(pubkey []byte, format uint16) string {
 
 func ss58hash(data []byte) [64]byte {
 	// Adapted from https://github.com/paritytech/substrate/blob/e6def65920d30029e42d498cb07cec5dd433b927/primitives/core/src/crypto.rs#L369
-	PREFIX := []byte("SS58PRE")
-	return blake2b.Sum512(append(PREFIX, data...))
+	prefix := []byte("SS58PRE")
+	return blake2b.Sum512(append(prefix, data...))
 }

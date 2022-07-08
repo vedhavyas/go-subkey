@@ -13,29 +13,9 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
-type pubKey struct {
-	key *ed25519.PublicKey
-}
-
-func (pub pubKey) Verify(msg []byte, signature []byte) bool {
-	return ed25519.Verify(*pub.key, msg, signature)
-}
-
-func (pub pubKey) Public() []byte {
-	return *pub.key
-}
-
-func (pub pubKey) AccountID() []byte {
-	return pub.Public()
-}
-
-func (pub pubKey) SS58Address(network uint16) string {
-	return subkey.SS58Encode(pub.AccountID(), network)
-}
-
 type keyRing struct {
 	secret *ed25519.PrivateKey
-	pub    pubKey
+	pub    *ed25519.PublicKey
 }
 
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
@@ -43,11 +23,11 @@ func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 }
 
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
-	return kr.pub.Verify(msg, signature)
+	return ed25519.Verify(*kr.pub, msg, signature)
 }
 
 func (kr keyRing) Public() []byte {
-	return kr.pub.Public()
+	return *kr.pub
 }
 
 func (kr keyRing) Seed() []byte {
@@ -55,11 +35,11 @@ func (kr keyRing) Seed() []byte {
 }
 
 func (kr keyRing) AccountID() []byte {
-	return kr.pub.AccountID()
+	return kr.Public()
 }
 
 func (kr keyRing) SS58Address(network uint16) string {
-	return kr.pub.SS58Address(network)
+	return subkey.SS58Encode(kr.AccountID(), network)
 }
 
 type Scheme struct{}
@@ -76,7 +56,7 @@ func (s Scheme) Generate() (subkey.KeyPair, error) {
 
 	return keyRing{
 		secret: &secret,
-		pub:    pubKey{key: &pub},
+		pub:    &pub,
 	}, nil
 }
 
@@ -85,7 +65,7 @@ func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 	pub := secret.Public().(ed25519.PublicKey)
 	return keyRing{
 		secret: &secret,
-		pub:    pubKey{key: &pub},
+		pub:    &pub,
 	}, nil
 }
 
@@ -138,5 +118,6 @@ func deriveKeyHard(secret []byte, cc [32]byte) ([]byte, error) {
 
 func (s Scheme) FromPublicKey(bytes []byte) (subkey.PublicKey, error) {
 	key := ed25519.PublicKey(bytes)
-	return pubKey{key: &key}, nil
+	kr := keyRing{pub: &key}
+	return &kr, nil
 }

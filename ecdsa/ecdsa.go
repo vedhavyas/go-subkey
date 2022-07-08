@@ -12,32 +12,9 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-type pubKey struct {
-	key *ecdsa.PublicKey
-}
-
-func (pub pubKey) Verify(msg []byte, signature []byte) bool {
-	digest := blake2b.Sum256(msg)
-	signature = signature[:64]
-	return secp256k1.VerifySignature(pub.Public(), digest[:], signature)
-}
-
-func (pub pubKey) Public() []byte {
-	return secp256k1.CompressPubkey(pub.key)
-}
-
-func (pub pubKey) AccountID() []byte {
-	account := blake2b.Sum256(pub.Public())
-	return account[:]
-}
-
-func (pub pubKey) SS58Address(network uint16) string {
-	return subkey.SS58Encode(pub.AccountID(), network)
-}
-
 type keyRing struct {
 	secret *ecdsa.PrivateKey
-	pub    pubKey
+	pub    *ecdsa.PublicKey
 }
 
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
@@ -46,7 +23,9 @@ func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 }
 
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
-	return kr.pub.Verify(msg, signature)
+	digest := blake2b.Sum256(msg)
+	signature = signature[:64]
+	return secp256k1.VerifySignature(kr.Public(), digest[:], signature)
 }
 
 func (kr keyRing) Seed() []byte {
@@ -54,15 +33,16 @@ func (kr keyRing) Seed() []byte {
 }
 
 func (kr keyRing) Public() []byte {
-	return kr.pub.Public()
+	return secp256k1.CompressPubkey(kr.pub)
 }
 
 func (kr keyRing) AccountID() []byte {
-	return kr.pub.AccountID()
+	account := blake2b.Sum256(kr.Public())
+	return account[:]
 }
 
 func (kr keyRing) SS58Address(network uint16) string {
-	return kr.pub.SS58Address(network)
+	return subkey.SS58Encode(kr.AccountID(), network)
 }
 
 type Scheme struct{}
@@ -79,7 +59,7 @@ func (s Scheme) Generate() (subkey.KeyPair, error) {
 
 	return keyRing{
 		secret: secret,
-		pub:    pubKey{key: secret.Public().(*ecdsa.PublicKey)},
+		pub:    secret.Public().(*ecdsa.PublicKey),
 	}, nil
 }
 
@@ -88,7 +68,7 @@ func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 	pub := secret.Public().(*ecdsa.PublicKey)
 	return keyRing{
 		secret: secret,
-		pub:    pubKey{key: pub},
+		pub:    pub,
 	}, nil
 }
 
@@ -144,5 +124,6 @@ func (s Scheme) FromPublicKey(bytes []byte) (subkey.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pubKey{key: key}, nil
+
+	return &keyRing{pub: key}, nil
 }

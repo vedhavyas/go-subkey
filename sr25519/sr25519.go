@@ -17,42 +17,10 @@ const (
 	signatureLength = 64
 )
 
-type pubKey struct {
-	key *sr25519.PublicKey
-}
-
-func (pub pubKey) Public() []byte {
-	bytes := pub.key.Encode()
-	return bytes[:]
-}
-
-func (pub pubKey) AccountID() []byte {
-	return pub.Public()
-}
-
-func (pub pubKey) SS58Address(network uint16) string {
-	return subkey.SS58Encode(pub.AccountID(), network)
-}
-
-func (pub pubKey) Verify(msg []byte, signature []byte) bool {
-	var sigs [signatureLength]byte
-	copy(sigs[:], signature)
-	sig := new(sr25519.Signature)
-	if err := sig.Decode(sigs); err != nil {
-		return false
-	}
-	ok, err := pub.key.Verify(sig, signingContext(msg))
-	if err != nil || !ok {
-		return false
-	}
-
-	return true
-}
-
 type keyRing struct {
 	seed   []byte
 	secret *sr25519.SecretKey
-	pub    pubKey
+	pub    *sr25519.PublicKey
 }
 
 func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
@@ -66,7 +34,18 @@ func (kr keyRing) Sign(msg []byte) (signature []byte, err error) {
 }
 
 func (kr keyRing) Verify(msg []byte, signature []byte) bool {
-	return kr.pub.Verify(msg, signature)
+	var sigs [signatureLength]byte
+	copy(sigs[:], signature)
+	sig := new(sr25519.Signature)
+	if err := sig.Decode(sigs); err != nil {
+		return false
+	}
+	ok, err := kr.pub.Verify(sig, signingContext(msg))
+	if err != nil || !ok {
+		return false
+	}
+
+	return true
 }
 
 func signingContext(msg []byte) *merlin.Transcript {
@@ -75,7 +54,8 @@ func signingContext(msg []byte) *merlin.Transcript {
 
 // Public returns the public key in bytes
 func (kr keyRing) Public() []byte {
-	return kr.pub.Public()
+	bytes := kr.pub.Encode()
+	return bytes[:]
 }
 
 func (kr keyRing) Seed() []byte {
@@ -83,11 +63,11 @@ func (kr keyRing) Seed() []byte {
 }
 
 func (kr keyRing) AccountID() []byte {
-	return kr.pub.AccountID()
+	return kr.Public()
 }
 
 func (kr keyRing) SS58Address(network uint16) string {
-	return kr.pub.SS58Address(network)
+	return subkey.SS58Encode(kr.AccountID(), network)
 }
 
 func deriveKeySoft(secret *sr25519.SecretKey, cc [32]byte) (*sr25519.SecretKey, error) {
@@ -134,7 +114,7 @@ func (s Scheme) Generate() (subkey.KeyPair, error) {
 	return keyRing{
 		seed:   seed[:],
 		secret: secret,
-		pub:    pubKey{key: pub},
+		pub:    pub,
 	}, nil
 }
 
@@ -151,7 +131,7 @@ func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 		return keyRing{
 			seed:   seed,
 			secret: ms.ExpandEd25519(),
-			pub:    pubKey{key: ms.Public()},
+			pub:    ms.Public(),
 		}, nil
 
 	case secretKeyLength:
@@ -167,7 +147,7 @@ func (s Scheme) FromSeed(seed []byte) (subkey.KeyPair, error) {
 		return keyRing{
 			seed:   seed,
 			secret: secret,
-			pub:    pubKey{key: pub},
+			pub:    pub,
 		}, nil
 	}
 
@@ -190,7 +170,7 @@ func (s Scheme) FromPhrase(phrase, pwd string) (subkey.KeyPair, error) {
 	return keyRing{
 		seed:   seed[:],
 		secret: secret,
-		pub:    pubKey{key: pub},
+		pub:    pub,
 	}, nil
 }
 
@@ -226,19 +206,19 @@ func (s Scheme) Derive(pair subkey.KeyPair, djs []subkey.DeriveJunction) (subkey
 		return nil, err
 	}
 
-	return &keyRing{seed: seed, secret: secret, pub: pubKey{key: pub}}, nil
+	return &keyRing{seed: seed, secret: secret, pub: pub}, nil
 }
 
 func (s Scheme) FromPublicKey(bytes []byte) (subkey.PublicKey, error) {
 	if len(bytes) != 32 {
-		return pubKey{}, fmt.Errorf("expected 32 bytes")
+		return nil, fmt.Errorf("expected 32 bytes")
 	}
 	arr := [32]byte{}
 	copy(arr[:], bytes[:32])
 	key, err := sr25519.NewPublicKey(arr)
 	if err != nil {
-		return pubKey{}, err
+		return nil, err
 	}
 
-	return pubKey{key: key}, nil
+	return &keyRing{pub: key}, nil
 }
